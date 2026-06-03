@@ -122,15 +122,15 @@ function updateNewsSyncTime(timeStr) {
 }
 
 function getNewsForTicker() {
-  // Cek apakah perlu auto-sync (jika sinkronisasi terakhir > 30 menit yang lalu)
+  // Cek apakah perlu auto-sync (hanya jika belum sinkronisasi HARI INI)
   const lastSyncStr = getConfigValue('LAST_NEWS_SYNC_TIME');
   let needsSync = !lastSyncStr;
   
   if (lastSyncStr) {
     try {
-      const lastSync = new Date(lastSyncStr).getTime();
-      const diffMinutes = (Date.now() - lastSync) / (60 * 1000);
-      if (diffMinutes > 30) {
+      const todayDate = new Date().toISOString().split('T')[0];
+      const lastSyncDate = lastSyncStr.split('T')[0];
+      if (todayDate !== lastSyncDate) {
         needsSync = true;
       }
     } catch (e) {
@@ -139,7 +139,11 @@ function getNewsForTicker() {
   }
   
   if (needsSync) {
-    syncNewsFromRSS();
+    try {
+      syncNewsFromRSS();
+    } catch (e) {
+      Logger.log('Auto-sync gagal: ' + e.message);
+    }
   }
   
   const sheet = getOrCreateNewsSheet();
