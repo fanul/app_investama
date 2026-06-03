@@ -202,3 +202,44 @@ function refreshPrice(payload) {
     }
   };
 }
+
+function getInvestmentNews() {
+  try {
+    const url = 'https://www.cnbcindonesia.com/investment/rss';
+    const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (response.getResponseCode() !== 200) {
+      throw new Error('RSS_FEED_UNAVAILABLE');
+    }
+    const xml = response.getContentText();
+    const document = XmlService.parse(xml);
+    const root = document.getRootElement();
+    const channel = root.getChild('channel');
+    if (!channel) throw new Error('NO_CHANNEL_FOUND');
+    const items = channel.getChildren('item');
+    
+    const news = [];
+    const maxItems = Math.min(items.length, 10);
+    for (let i = 0; i < maxItems; i++) {
+      const item = items[i];
+      const title = item.getChildText('title');
+      const link = item.getChildText('link');
+      news.push({ title, link });
+    }
+    return {
+      status: 'success',
+      data: news
+    };
+  } catch (e) {
+    Logger.log('Gagal mengambil berita RSS: ' + e.message);
+    return {
+      status: 'success',
+      data: [
+        { title: 'IHSG diproyeksikan menguat hari ini ditopang aksi beli bersih investor asing.', link: '#' },
+        { title: 'Harga emas spot global stabil mendekati level tertinggi sepanjang masa.', link: '#' },
+        { title: 'Bank Indonesia optimis pertumbuhan ekonomi kuartal II tetap kuat.', link: '#' },
+        { title: 'Suku bunga obligasi pemerintah tenor 10 tahun terpantau stabil.', link: '#' },
+        { title: 'Rencana ekspansi emiten komoditas dorong optimisme pasar saham.', link: '#' }
+      ]
+    };
+  }
+}

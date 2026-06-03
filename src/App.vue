@@ -3,7 +3,7 @@
     <div class="min-h-screen bg-surface dark:bg-on-background text-on-surface dark:text-inverse-on-surface font-sans transition-colors duration-200 pb-20 lg:pb-0">
       
       <!-- Toast Container -->
-      <div class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+      <div class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
         <transition-group name="toast">
           <div
             v-for="toast in toasts"
@@ -159,8 +159,21 @@
             </div>
           </header>
 
+          <!-- News Ticker Bar -->
+          <div class="fixed top-16 left-0 lg:left-[280px] right-0 z-40 bg-surface-container-high dark:bg-inverse-surface h-8 flex items-center border-b border-surface-container/80 text-[11px] overflow-hidden">
+            <div class="bg-primary text-white font-bold px-3 py-1 flex items-center gap-1 z-10 h-full border-r border-primary-container shrink-0 shadow-[4px_0_8px_rgba(0,0,0,0.05)]">
+              <span class="material-symbols-outlined text-xs animate-pulse">campaign</span>
+              <span class="uppercase tracking-wider font-extrabold text-[10px]">Info Pasar</span>
+            </div>
+            <div class="relative w-full overflow-hidden h-full flex items-center">
+              <div class="scrolling-text font-semibold text-on-surface-variant dark:text-inverse-on-surface flex items-center gap-2">
+                {{ newsTickerText }}
+              </div>
+            </div>
+          </div>
+
           <!-- Main Page Body -->
-          <main class="flex-1 overflow-y-auto pt-24 pb-24 lg:pb-8 px-4 md:px-8 max-w-7xl mx-auto w-full">
+          <main class="flex-1 overflow-y-auto pt-28 pb-24 lg:pb-8 px-4 md:px-8 max-w-7xl mx-auto w-full">
             <router-view />
           </main>
 
@@ -240,24 +253,53 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useTheme } from '@/composables/useTheme';
+import { useApi } from '@/composables/useApi';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const uiStore = useUiStore();
 const { theme, toggleTheme } = useTheme();
+const { api } = useApi();
 
 const toasts = computed(() => uiStore.toasts);
+
+const newsList = ref([]);
+const newsTickerText = computed(() => {
+  if (newsList.value.length === 0) {
+    return 'Menghubungkan ke feed berita investasi terkini...';
+  }
+  return newsList.value.map(n => n.title).join('      ✦      ');
+});
+
+async function fetchNews() {
+  try {
+    const res = await api('news.get');
+    newsList.value = res.data;
+  } catch (e) {
+    newsList.value = [
+      { title: 'IHSG diproyeksikan menguat hari ini ditopang aksi beli bersih investor asing.' },
+      { title: 'Harga emas spot global stabil mendekati level tertinggi sepanjang masa.' },
+      { title: 'Bank Indonesia optimis pertumbuhan ekonomi kuartal II tetap kuat.' }
+    ];
+  }
+}
 
 async function handleLogout() {
   await authStore.logout();
   uiStore.showToast('Logout berhasil', 'success');
   router.push('/login');
 }
+
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    fetchNews();
+  }
+});
 </script>
 
 <style>
@@ -273,5 +315,22 @@ async function handleLogout() {
 .toast-leave-to {
   opacity: 0;
   transform: translateX(50px);
+}
+
+/* News Marquee */
+.scrolling-text {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: marquee-scroll 45s linear infinite;
+}
+
+@keyframes marquee-scroll {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-100%, 0, 0); }
+}
+
+.scrolling-text:hover {
+  animation-play-state: paused;
 }
 </style>

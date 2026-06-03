@@ -99,6 +99,8 @@ const Router = {
         return refreshPrice(data);
       case 'price.manualUpdate':
         return manualUpdatePrice(data);
+      case 'news.get':
+        return getInvestmentNews();
         
       case 'export.csv':
         return exportCSV(userId, data);
