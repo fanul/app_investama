@@ -148,3 +148,62 @@ function cleanErrorMessage(msg) {
   
   return msg;
 }
+
+/**
+ * Pemicu otomatis (Trigger) yang dipanggil saat Spreadsheet dibuka oleh pengguna.
+ * Membuat menu kustom di bilah menu Google Sheets untuk memicu aksi secara manual.
+ */
+function onOpen() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('Investama Admin')
+      .addItem('📰 Sinkronkan Berita CNBC RSS', 'runSyncNewsFromSpreadsheet')
+      .addItem('📈 Paksa Sinkronkan Semua Harga Aset', 'runSyncPricesFromSpreadsheet')
+      .addItem('💾 Backup Database ke Google Drive', 'runSyncBackupFromSpreadsheet')
+      .addSeparator()
+      .addItem('⚙️ Inisialisasi / Reset Struktur Lembar Kerja', 'installApp')
+      .addToUi();
+  } catch (e) {
+    Logger.log('Tidak dalam konteks UI Spreadsheet: ' + e.message);
+  }
+}
+
+// Fungsi pembungkus (Wrapper) untuk menampilkan pesan dialog di UI Spreadsheet
+function runSyncNewsFromSpreadsheet() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    const res = syncNewsFromRSS();
+    if (res.status === 'success') {
+      ui.alert('Berhasil', res.data.message, ui.ButtonSet.OK);
+    } else {
+      ui.alert('Gagal', res.message, ui.ButtonSet.OK);
+    }
+  } catch (e) {
+    ui.alert('Error', 'Gagal menyinkronkan berita: ' + e.message, ui.ButtonSet.OK);
+  }
+}
+
+function runSyncPricesFromSpreadsheet() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    const res = getAllPrices();
+    if (res.status === 'success') {
+      ui.alert('Berhasil', 'Seluruh harga instrumen aktif berhasil disinkronkan!', ui.ButtonSet.OK);
+    } else {
+      ui.alert('Gagal', 'Gagal sinkronisasi harga.', ui.ButtonSet.OK);
+    }
+  } catch (e) {
+    ui.alert('Error', 'Gagal sinkronisasi harga: ' + e.message, ui.ButtonSet.OK);
+  }
+}
+
+function runSyncBackupFromSpreadsheet() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    const backupUrl = backupSpreadsheet();
+    ui.alert('Berhasil', 'Spreadsheet berhasil dibackup ke Google Drive!\nTautan backup:\n' + backupUrl, ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('Error', 'Gagal membuat backup: ' + e.message, ui.ButtonSet.OK);
+  }
+}
+
