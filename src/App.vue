@@ -160,7 +160,7 @@
           </header>
 
           <!-- Main Page Body -->
-          <main class="flex-1 overflow-y-auto pt-20 pb-24 lg:pb-8 p-4 md:p-8 max-w-7xl mx-auto w-full">
+          <main class="flex-1 overflow-y-auto pt-24 pb-24 lg:pb-8 px-4 md:px-8 max-w-7xl mx-auto w-full">
             <router-view />
           </main>
 
