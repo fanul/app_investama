@@ -10,7 +10,8 @@ function installApp() {
     'PriceHistory': ['history_id', 'instrument_id', 'price', 'price_date', 'source', 'fetched_at'],
     'AuditLog': ['log_id', 'user_id', 'action', 'target_id', 'details', 'ip_info', 'created_at'],
     'SystemConfig': ['config_key', 'config_value', 'description', 'updated_at', 'updated_by'],
-    'Sessions': ['session_id', 'user_id', 'expires_at', 'created_at', 'is_valid']
+    'Sessions': ['session_id', 'user_id', 'expires_at', 'created_at', 'is_valid'],
+    'News': ['news_id', 'title', 'link', 'published_at', 'source', 'is_active', 'created_at']
   };
   
   Object.entries(schemas).forEach(([name, headers]) => {
@@ -50,7 +51,10 @@ function seedSystemConfig(ss) {
     ['GOLD_MANUAL_PRICE', '1320000', 'Harga emas manual per gram IDR (fallback)', now, 'system'],
     ['BI_RATE', '6.25', 'BI 7-Day Repo Rate (%)', now, 'system'],
     ['SESSION_TTL_HOURS', '24', 'Durasi sesi login (jam)', now, 'system'],
-    ['MAX_UPLOAD_SIZE_MB', '5', 'Batas upload file (MB)', now, 'system']
+    ['MAX_UPLOAD_SIZE_MB', '5', 'Batas upload file (MB)', now, 'system'],
+    ['NEWS_MAX_DISPLAYED', '10', 'Jumlah maksimal berita yang ditampilkan', now, 'system'],
+    ['NEWS_DAYS_LIMIT', '3', 'Batasan umur berita dalam hari', now, 'system'],
+    ['LAST_NEWS_SYNC_TIME', '', 'Waktu terakhir sinkronisasi berita dari RSS', now, 'system']
   ];
   
   defaults.forEach(row => sheet.appendRow(row));

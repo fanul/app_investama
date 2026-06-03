@@ -269,11 +269,29 @@ const { api } = useApi();
 const toasts = computed(() => uiStore.toasts);
 
 const newsList = ref([]);
+
+function formatNewsDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    const date = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `[${date}/${month} ${hours}:${minutes}]`;
+  } catch (e) {
+    return '';
+  }
+}
+
 const newsTickerText = computed(() => {
   if (newsList.value.length === 0) {
     return 'Menghubungkan ke feed berita investasi terkini...';
   }
-  return newsList.value.map(n => n.title).join('      ✦      ');
+  return newsList.value.map(n => {
+    const datePrefix = formatNewsDate(n.published_at);
+    return `${datePrefix} ${n.title}`;
+  }).join('      ✦      ');
 });
 
 async function fetchNews() {
@@ -282,9 +300,9 @@ async function fetchNews() {
     newsList.value = res.data;
   } catch (e) {
     newsList.value = [
-      { title: 'IHSG diproyeksikan menguat hari ini ditopang aksi beli bersih investor asing.' },
-      { title: 'Harga emas spot global stabil mendekati level tertinggi sepanjang masa.' },
-      { title: 'Bank Indonesia optimis pertumbuhan ekonomi kuartal II tetap kuat.' }
+      { title: 'IHSG diproyeksikan menguat hari ini ditopang aksi beli bersih investor asing.', published_at: new Date().toISOString() },
+      { title: 'Harga emas spot global stabil mendekati level tertinggi sepanjang masa.', published_at: new Date().toISOString() },
+      { title: 'Bank Indonesia optimis pertumbuhan ekonomi kuartal II tetap kuat.', published_at: new Date().toISOString() }
     ];
   }
 }

@@ -110,7 +110,33 @@
 
     <!-- TAB CONTENT 2: INSTRUMENT & PRICE FEED MANAGEMENT -->
     <div v-if="activeTab === 'instruments'" class="space-y-6">
-      <div class="p-6 bg-surface-container-lowest rounded-xl border border-surface-container vibrant-card-shadow space-y-6">
+      
+      <!-- Sub-Tabs Navigation -->
+      <div class="flex border-b border-surface-container gap-2">
+        <button 
+          @click="activeSubTab = 'assets'"
+          class="px-4 py-2 border-b-2 font-bold text-xs transition-colors flex items-center gap-1.5"
+          :class="activeSubTab === 'assets' 
+            ? 'border-primary text-primary dark:text-primary-fixed-dim' 
+            : 'border-transparent text-on-surface-variant hover:text-on-surface'"
+        >
+          <span class="material-symbols-outlined text-sm">trending_up</span>
+          <span>Ticker Aset</span>
+        </button>
+        <button 
+          @click="activeSubTab = 'news'"
+          class="px-4 py-2 border-b-2 font-bold text-xs transition-colors flex items-center gap-1.5"
+          :class="activeSubTab === 'news' 
+            ? 'border-primary text-primary dark:text-primary-fixed-dim' 
+            : 'border-transparent text-on-surface-variant hover:text-on-surface'"
+        >
+          <span class="material-symbols-outlined text-sm">campaign</span>
+          <span>Running News</span>
+        </button>
+      </div>
+
+      <!-- SUB-TAB 1: ASSETS -->
+      <div v-if="activeSubTab === 'assets'" class="p-6 bg-surface-container-lowest rounded-xl border border-surface-container vibrant-card-shadow space-y-6">
         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <h3 class="text-headline-md font-headline-md font-bold text-on-surface">Manajemen Instrumen Investasi</h3>
@@ -227,6 +253,108 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 2: NEWS MANAGEMENT -->
+      <div v-if="activeSubTab === 'news'" class="p-6 bg-surface-container-lowest rounded-xl border border-surface-container vibrant-card-shadow space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+          <div>
+            <h3 class="text-headline-md font-headline-md font-bold text-on-surface">Manajemen Running News Ticker</h3>
+            <p class="text-xs text-on-surface-variant">Konfigurasi limit, batasan umur berita, dan sinkronisasikan berita ekonomi secara dinamis.</p>
+          </div>
+          
+          <button 
+            @click="triggerNewsSync"
+            :disabled="isSyncingNews"
+            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl shadow-md transition-colors text-xs active:scale-95 disabled:opacity-50 self-start"
+          >
+            <span class="material-symbols-outlined text-sm" :class="{ 'animate-spin': isSyncingNews }">sync</span>
+            <span>{{ isSyncingNews ? 'Menyinkronkan...' : 'Sinkronkan Berita' }}</span>
+          </button>
+        </div>
+
+        <!-- Configuration Settings for News -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-surface p-4 rounded-xl border border-surface-container text-xs">
+          <!-- Limit Display -->
+          <div class="space-y-2">
+            <label class="block font-bold text-on-surface-variant">Jumlah Maksimal Berita di Scroll Ticker</label>
+            <input 
+              v-model.number="newsSettings.maxDisplayed" 
+              type="number"
+              min="1"
+              class="w-full px-3 py-2 rounded-lg border border-surface-container-high bg-surface-container-lowest focus:ring-1 focus:ring-primary focus:outline-none"
+            />
+          </div>
+          <!-- Days Limit -->
+          <div class="space-y-2">
+            <label class="block font-bold text-on-surface-variant">Batas Umur Berita (Hari)</label>
+            <div class="flex gap-2">
+              <input 
+                v-model.number="newsSettings.daysLimit" 
+                type="number"
+                min="1"
+                class="w-full px-3 py-2 rounded-lg border border-surface-container-high bg-surface-container-lowest focus:ring-1 focus:ring-primary focus:outline-none"
+              />
+              <button 
+                @click="saveNewsSettings"
+                :disabled="isLoading"
+                class="px-4 py-2 bg-secondary hover:bg-secondary/95 text-white font-bold rounded-lg transition-colors shrink-0"
+              >
+                Simpan Konfig
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- List of Stored News -->
+        <div class="space-y-3">
+          <h4 class="text-sm font-bold text-on-surface">Daftar Berita Tersimpan</h4>
+          
+          <div class="overflow-x-auto border border-surface-container rounded-xl">
+            <table class="w-full border-collapse text-left text-xs text-on-surface-variant">
+              <thead class="bg-surface-container text-on-surface font-bold">
+                <tr>
+                  <th class="px-4 py-3">Waktu Publikasi</th>
+                  <th class="px-4 py-3">Judul Berita</th>
+                  <th class="px-4 py-3">Sumber</th>
+                  <th class="px-4 py-3 text-center">Status Tampil</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-surface-container">
+                <tr 
+                  v-for="news in adminNewsList" 
+                  :key="news.news_id" 
+                  class="hover:bg-surface-container-low transition-colors duration-150"
+                >
+                  <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(news.published_at, true) }}</td>
+                  <td class="px-4 py-3 font-semibold text-on-surface">
+                    <a :href="news.link" target="_blank" class="hover:underline flex items-center gap-1">
+                      {{ news.title }}
+                      <span class="material-symbols-outlined text-[12px]">open_in_new</span>
+                    </a>
+                  </td>
+                  <td class="px-4 py-3">{{ news.source }}</td>
+                  <td class="px-4 py-3 text-center">
+                    <button 
+                      @click="toggleNewsActive(news)"
+                      class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors duration-150 uppercase"
+                      :class="news.is_active === true || String(news.is_active) === 'true'
+                        ? 'bg-primary-container/20 text-primary border-primary/20' 
+                        : 'bg-surface-container text-on-surface-variant border-surface-container-high'"
+                    >
+                      {{ (news.is_active === true || String(news.is_active) === 'true') ? 'Aktif' : 'Nonaktif' }}
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="adminNewsList.length === 0">
+                  <td colspan="4" class="p-8 text-center text-on-surface-variant">
+                    Tidak ada berita tersimpan. Silakan lakukan sinkronisasi berita.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -545,6 +673,15 @@ const instrumentForm = ref({
   last_price: 0
 });
 
+// News and Sub-tab states
+const activeSubTab = ref('assets');
+const isSyncingNews = ref(false);
+const adminNewsList = ref([]);
+const newsSettings = ref({
+  maxDisplayed: 10,
+  daysLimit: 3
+});
+
 // Computed list of filtered instruments
 const filteredInstruments = computed(() => {
   if (instrumentFilter.value === 'all') return activeInstruments.value;
@@ -588,6 +725,16 @@ async function loadConfigs() {
     // Tarik list instrumen
     const insRes = await api('instrument.list');
     activeInstruments.value = insRes.data;
+    
+    // Tarik configs berita
+    const maxDisplayedNews = configs.value.find(c => c.config_key === 'NEWS_MAX_DISPLAYED');
+    if (maxDisplayedNews) {
+      newsSettings.value.maxDisplayed = parseInt(maxDisplayedNews.config_value) || 10;
+    }
+    const daysLimitNews = configs.value.find(c => c.config_key === 'NEWS_DAYS_LIMIT');
+    if (daysLimitNews) {
+      newsSettings.value.daysLimit = parseInt(daysLimitNews.config_value) || 3;
+    }
   } catch (err) {
     uiStore.showToast(err.message, 'error');
   } finally {
@@ -817,6 +964,65 @@ async function handleBackup() {
   }
 }
 
+// News Management Functions
+async function loadAdminNews() {
+  try {
+    const res = await api('admin.news.list');
+    adminNewsList.value = res.data;
+  } catch (err) {
+    uiStore.showToast(err.message, 'error');
+  }
+}
+
+async function triggerNewsSync() {
+  isSyncingNews.value = true;
+  try {
+    const res = await api('admin.news.sync');
+    uiStore.showToast(res.data.message || 'Sinkronisasi berita berhasil!', 'success');
+    await loadAdminNews();
+  } catch (err) {
+    uiStore.showToast(err.message, 'error');
+  } finally {
+    isSyncingNews.value = false;
+  }
+}
+
+async function toggleNewsActive(news) {
+  const currentStatus = news.is_active === true || String(news.is_active) === 'true';
+  const nextStatus = !currentStatus;
+  
+  try {
+    await api('admin.news.toggle', {
+      news_id: news.news_id,
+      is_active: nextStatus
+    });
+    uiStore.showToast('Status tampilan berita berhasil diubah!', 'success');
+    await loadAdminNews();
+  } catch (err) {
+    uiStore.showToast(err.message, 'error');
+  }
+}
+
+async function saveNewsSettings() {
+  isLoading.value = true;
+  try {
+    await api('admin.config.set', {
+      key: 'NEWS_MAX_DISPLAYED',
+      value: String(newsSettings.value.maxDisplayed)
+    });
+    await api('admin.config.set', {
+      key: 'NEWS_DAYS_LIMIT',
+      value: String(newsSettings.value.daysLimit)
+    });
+    uiStore.showToast('Konfigurasi running news berhasil disimpan!', 'success');
+    await loadConfigs();
+  } catch (err) {
+    uiStore.showToast(err.message, 'error');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 // Category Badge styles
 function catBadgeClass(cat) {
   switch (cat) {
@@ -833,8 +1039,12 @@ onMounted(() => {
   if (route.query.tab) {
     activeTab.value = route.query.tab;
   }
+  if (route.query.subtab) {
+    activeSubTab.value = route.query.subtab;
+  }
   loadUsers();
   loadConfigs();
   loadLogs();
+  loadAdminNews();
 });
 </script>

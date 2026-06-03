@@ -100,7 +100,13 @@ const Router = {
       case 'price.manualUpdate':
         return manualUpdatePrice(data);
       case 'news.get':
-        return getInvestmentNews();
+        return getNewsForTicker();
+      case 'admin.news.list':
+        return listAllNews();
+      case 'admin.news.toggle':
+        return toggleNewsActive(data);
+      case 'admin.news.sync':
+        return syncNewsFromRSS();
         
       case 'export.csv':
         return exportCSV(userId, data);

@@ -8,7 +8,8 @@ const CONFIG = {
     PRICE_HISTORY: 'PriceHistory',
     AUDIT_LOG: 'AuditLog',
     SYSTEM_CONFIG: 'SystemConfig',
-    SESSIONS: 'Sessions'
+    SESSIONS: 'Sessions',
+    NEWS: 'News'
   },
   SESSION_TTL: 24 * 60 * 60 * 1000, // 24 jam dalam milidetik
   MAX_ROWS_PER_FETCH: 1000
